@@ -1,0 +1,70 @@
+const mongoose = require('mongoose');
+const express = require('express');
+const router = express.Router();
+
+const Order = require('../orders/order.model');
+const Book = require('../books/book.model');
+
+// Function to calculate admin stats
+router.get('/', async(req, res)=>{
+    try{
+        // Total number of orders
+        const totalOrders = await Order.countDocuments();
+
+        // Total sales (sum of all totalPrice from orders)
+        const totalSales = await Order.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$totalPrice" }
+                }
+            }
+        ]);
+
+        // Trending books statistics
+        const trendingBooksCount = await Book.aggregate([
+            {
+                $match:{trending: true}
+            },
+            {
+                $count: "trendingBooksCount"
+            }
+
+        ]);
+
+        // Extract the count of trending books from the aggregation result
+        const trendingBooks = trendingBooksCount.length > 0 ? trendingBooksCount[0].trendingBooksCount : 0;
+
+        // Total number of books
+        const totalBooks = await Book.countDocuments();
+
+        //Monthly sales (group by month and sum total sales for each month)
+        const monthlySales = await Order.aggregate([
+            {
+                $group: {
+                    _id: {$dateToString: {format: "%Y-%m", date: "$createdAt"}},
+                    totalSales: { $sum: "$totalPrice" },
+                    totalOrders: { $sum: 1 }
+                }
+            },
+            {$sort: {_id: 1}}
+        ]);
+
+        //Result summary
+        res.status(200).json({
+            totalOrders,
+            totalSales: totalSales[0]?.totalSales || 0,
+            trendingBooks,
+            totalBooks,
+            monthlySales
+        })
+
+
+
+    }catch(error){
+        console.error("Error fetching admin stats:", error);
+        res.status(500).json({ message: "Failed to fetch admin stats" });
+    }
+})
+
+module.exports = router;
