@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 
-const port = process.env.PORT || 5000;
+
 require("dotenv").config();
 
 const mongoose = require("mongoose");
@@ -30,13 +30,14 @@ app.use("/api/orders", orderRoute);
 app.use('/api/auth',userRoute );
 app.use('/api/admin', adminRoutes);
 
-async function main() {
-  await mongoose.connect(process.env.DB_URL);
+
 
   app.get("/", (req, res) => {
     res.send("Chaw Be Lar");
   });
-}
+
+
+  mongoose.connect(process.env.DB_URL)
 
 main()
   .then(() => console.log("Connected to MongoDB"))
