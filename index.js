@@ -33,6 +33,7 @@ async function main() {
 
 main().then(() => console.log("Mongodb connect successfully!")).catch(err => console.log(err));
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Example app listening on port ${port}`);
+// });
+module.exports = app;
